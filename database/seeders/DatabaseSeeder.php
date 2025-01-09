@@ -16,10 +16,19 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create 5 test users
-        User::factory(5)->create();
+        // Create an admin user
+        $user = User::create([
+            'email' => 'ed@ed.com',
+            'password' => bcrypt('password'),
+            'name' => 'Ed',
+            'is_admin' => true,
+        ]);
+        
+        // Seed the remaining 4 users
+        User::factory(8)->create();
 
         // Create 10 broadcasts with dates in the last 30 days
-        Broadcast::factory(10)->create()->each(function ($broadcast) {
+        Broadcast::factory(20)->create()->each(function ($broadcast) {
             $broadcast->created_at = Carbon::now()->subDays(rand(0, 30));
             $broadcast->save();
         });
