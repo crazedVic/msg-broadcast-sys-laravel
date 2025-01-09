@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserBroadcastController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -14,6 +15,11 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/broadcasts', [UserBroadcastController::class, 'index'])->name('user.broadcasts.index');
+    Route::get('/user/broadcasts/{id}', [UserBroadcastController::class, 'show'])->name('user.broadcasts.show');
 });
 
 Route::middleware([

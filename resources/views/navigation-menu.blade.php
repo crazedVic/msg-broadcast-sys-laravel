@@ -16,6 +16,12 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                 
+                    @if (!Auth::user()->is_admin)
+                        <x-nav-link href="{{ route('user.broadcasts.index') }}" :active="request()->routeIs('user.broadcasts.*')">
+                            {{ __('Inbox') }}
+                        </x-nav-link>
+                    @endif
+                
                     @if (Auth::user()->is_admin)
                         <x-nav-link href="{{ route('admin.broadcasts.index') }}" :active="request()->routeIs('admin.broadcasts.*')">
                             {{ __('Broadcasts') }}

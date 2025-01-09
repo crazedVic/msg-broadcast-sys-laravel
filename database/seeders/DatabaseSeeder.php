@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         // Create 5 test users
         // Create an admin user
-        User::create([
+        $admin = User::create([
             'email' => 'ed@ed.com',
             'password' => bcrypt('passwd99'),
             'name' => 'Ed',
@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
 
         // Seed the remaining 4 users
         $users = User::factory(9)->create()->prepend($user);
+
         
         // Create a new user for Bob
         
@@ -49,15 +50,15 @@ class DatabaseSeeder extends Seeder
         // Randomly mark some broadcasts as read or deleted by some users
         foreach ($broadcasts as $broadcast) {
             // Ensure the first user doesn't read all broadcasts
-            $usersToInteract = $users->skip(1)->shuffle()->take(rand(0, $users->count() - 1));
-
+            $usersToInteract = $users->shuffle()->take(rand(0, $users->count() - 1));
+            //$usersToInteract = $users->skip(1)->shuffle()->take(rand(0, $users->count()));
             foreach ($usersToInteract as $user) {
                 if (rand(0, 2) > 0) { // Mark as read or deleted
                     BroadcastUserState::create([
                         'user_id' => $user->id,
                         'broadcast_id' => $broadcast->id,
                         'read_at' => rand(0, 1) ? Carbon::now()->subDays(rand(0, 30)) : null, // Randomly set read_at
-                        'deleted_at' => rand(0, 3) === 0 ? Carbon::now()->subDays(rand(0, 30)) : null, // Randomly set deleted_at
+                        'deleted_at' => rand(0, 2) === 0 ? Carbon::now()->subDays(rand(0, 30)) : null, // Randomly set deleted_at
                         'created_at' => Carbon::now()->subDays(rand(0, 30)),
                         'updated_at' => Carbon::now()->subDays(rand(0, 30)),
                     ]);
