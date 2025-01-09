@@ -10,21 +10,19 @@
                 <div class="p-6 lg:p-8 bg-white border-b border-gray-200">
                     <div class="flex justify-end mb-4">
     <table class="table w-full">
-        <thead>
-            <tr>
-                <th>Title</th>
-            </tr>
-        </thead>
         <tbody>
             @foreach ($broadcasts as $broadcast)
-            <tr >
-                <td class="mb-8"><div class="text-lg {{$broadcast->state }}">
-                    {{ $broadcast->created_at }} {{$broadcast->title }}<div>
-                    <div class="font-extralight text-sm ml-3"> {{$broadcast->content}} </div>    
-
-
-                    </td>
-                          </tr>
+            <tr class="h-24 border">
+                <td class="text-xs align-top p-4">{{ $broadcast->created_at }}</td>
+                <td class="align-top p-4">
+                    <div class="text-lg  {{$broadcast->state }}">
+                        {{$broadcast->title }}
+                        <div>
+                    <div class="font-extralight text-sm ml-3"> 
+                        {{$broadcast->content}} 
+                        </div>    
+                </td>
+            </tr>
             @endforeach
         </tbody>
     </table>
