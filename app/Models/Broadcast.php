@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Broadcast extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -45,5 +46,25 @@ class Broadcast extends Model
     public function userStates()
     {
         return $this->hasMany(BroadcastUserState::class);
+    }
+
+    public function getUserStateClassAttribute()
+    {
+        return match(true) {
+            // Broadcast is deleted and has no user state
+            $this->trashed() && !$this->has_state => 'text-orange-500 font-bold',
+            
+            // Broadcast is deleted and user state is deleted
+            $this->trashed() && $this->is_deleted => 'text-red-500',
+            
+            // Broadcast is deleted but was previously read
+            $this->trashed() && $this->has_state => 'text-orange-500',
+            
+            // No user state (new broadcast)
+            !$this->has_state => 'font-semibold',
+            
+            // Has user state but not deleted (read)
+            default => 'font-normal'
+        };
     }
 }
