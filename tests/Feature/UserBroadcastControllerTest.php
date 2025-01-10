@@ -2,6 +2,7 @@
 
 use App\Models\Broadcast;
 use App\Models\User;
+use App\Models\BroadcastUserState;
 
 test('index requires authentication', function () {
     $response = $this->get(route('user.broadcasts.index'));
@@ -46,15 +47,29 @@ test('soft delete requires authentication', function () {
     $response->assertRedirect(route('login'));
 });
 
-test('authenticated user can soft delete a broadcast', function () {
-    $user = User::factory()->create();
-    $broadcast = Broadcast::factory()->create();
-    
+test('authenticated user can soft delete their own broadcast user state', function () {
+    $user = User::factory()->create(); // Create a regular user
+    $broadcast = Broadcast::factory()->create(); // Create a broadcast
+    $state = BroadcastUserState::factory()->create([
+        'user_id' => $user->id,
+        'broadcast_id' => $broadcast->id,
+    ]); // Create the associated BroadcastUserState for the user
+
     $response = $this->actingAs($user)
-        ->delete(route('user.broadcasts.soft-delete', $broadcast));
-        
-    $response->assertRedirect(route('user.broadcasts.index'));
-    $this->assertSoftDeleted($broadcast);
+        ->delete(route('user.broadcasts.soft-delete', $broadcast->id));
+
+    // Ensure the response redirects back with a success message
+    $response->assertRedirect();
+    $response->assertSessionHas('success', 'Broadcast soft deleted successfully.');
+
+    // Assert the BroadcastUserState is soft deleted
+    $this->assertSoftDeleted('broadcast_user_states', ['id' => $state->id]);
+
+    // Ensure the broadcast itself remains untouched
+    $this->assertDatabaseHas('broadcasts', [
+        'id' => $broadcast->id,
+        'deleted_at' => null,
+    ]);
 });
 
 test('cannot view non-existent broadcast', function () {

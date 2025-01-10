@@ -95,7 +95,9 @@ test('admin can delete a broadcast', function () {
         ->delete(route('admin.broadcasts.destroy', $broadcast));
         
     $response->assertRedirect(route('admin.broadcasts.index'));
-    $this->assertDatabaseMissing('broadcasts', ['id' => $broadcast->id]);
+
+    // Assert the broadcast is soft deleted
+    $this->assertSoftDeleted('broadcasts', ['id' => $broadcast->id]);
 });
 
 test('store requires valid data', function () {

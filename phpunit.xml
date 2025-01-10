@@ -29,25 +29,5 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
-        <providers>
-            <provider class="App\Providers\AppServiceProvider"/>
-            <provider class="App\Providers\AuthServiceProvider"/>
-            <provider class="App\Providers\BroadcastServiceProvider"/>
-            <provider class="App\Providers\EventServiceProvider"/>
-            <provider class="App\Providers\FortifyServiceProvider"/>
-            <provider class="App\Providers\JetstreamServiceProvider"/>
-            <provider class="App\Providers\RouteServiceProvider"/>
-        </providers>
-    </php>
-    <php>
-        <providers>
-            <provider class="App\Providers\AppServiceProvider"/>
-            <provider class="App\Providers\AuthServiceProvider"/>
-            <provider class="App\Providers\BroadcastServiceProvider"/>
-            <provider class="App\Providers\EventServiceProvider"/>
-            <provider class="App\Providers\FortifyServiceProvider"/>
-            <provider class="App\Providers\JetstreamServiceProvider"/>
-            <provider class="App\Providers\RouteServiceProvider"/>
-        </providers>
     </php>
 </phpunit>
