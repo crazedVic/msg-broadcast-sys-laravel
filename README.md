@@ -118,7 +118,7 @@ We created `SeedOnlyDataCommand` which:
 ### Smart Seeding Strategy
 The seeder uses a flag-based approach to determine seeding behavior:
 - `data_only = false`: Full system seed including users
- - Creates admin user
+ - Creates admin user as the first user
  - Creates test users
  - Generates broadcast data
 - `data_only = true`: Only seeds broadcast data
@@ -133,7 +133,7 @@ The seeding strategy specifically creates:
  - Some broadcasts are read
  - Some are deleted
  - Some users have more interaction than others
- - First user intentionally doesn't read all broadcasts
+ - The admin user intentionally doesn't read all broadcasts
 - Realistic timestamps for:
  - Broadcast creation
  - Read states
