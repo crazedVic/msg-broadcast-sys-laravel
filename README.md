@@ -94,3 +94,73 @@ A Laravel-based broadcast messaging system that allows administrators to send me
 - Soft deletes for data integrity
 - Proper authorization checks
 - Cross-device state management
+
+# Addendum: Development Workflow & Test Data Management
+
+## Custom Migration Command for Development
+
+During development of the broadcast messaging system, we needed a way to quickly refresh and test data without the typical disruption of losing login sessions. We solved this with a custom artisan command `migrate:freshdata`.
+
+### The Problem
+Standard Laravel migration refreshes (`migrate:fresh`) drop all tables including authentication tables, which means:
+- Developers must log in again after each data refresh
+- Testing different user perspectives becomes tedious
+- Development flow is interrupted frequently
+- Session/authentication state is lost
+
+### The Solution: Selective Migration Rollback
+We created `SeedOnlyDataCommand` which:
+1. Counts total migrations
+2. Rolls back all except the last 5 (which contain user/session tables)
+3. Re-runs migrations
+4. Seeds only broadcast-related data
+
+### Smart Seeding Strategy
+The seeder uses a flag-based approach to determine seeding behavior:
+- `data_only = false`: Full system seed including users
+ - Creates admin user
+ - Creates test users
+ - Generates broadcast data
+- `data_only = true`: Only seeds broadcast data
+ - Uses existing users
+ - Only refreshes broadcast content
+ - Maintains all user states
+
+### Realistic Data Generation
+The seeding strategy specifically creates:
+- 125 broadcasts spread across 30 days
+- Randomized user interactions:
+ - Some broadcasts are read
+ - Some are deleted
+ - Some users have more interaction than others
+ - First user intentionally doesn't read all broadcasts
+- Realistic timestamps for:
+ - Broadcast creation
+ - Read states
+ - Deletion states
+
+### Key Benefits
+1. Development Efficiency:
+  - Maintain login sessions while testing
+  - Quick data refresh
+  - Consistent test environment
+
+2. Testing Quality:
+  - Realistic data patterns
+  - Various user states
+  - Different broadcast states
+  - Time-spread data
+
+3. Feature Testing:
+  - Test filtering with real data
+  - Verify state management
+  - Check pagination
+  - Validate UI state displays
+
+### Usage
+```bash
+# Refresh only broadcast data (keeps login session)
+php artisan migrate:freshdata
+
+# Full system refresh including users (requires re-login)
+php artisan migrate:fresh --seed
