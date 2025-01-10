@@ -41,10 +41,6 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-beforeEach(function () {
-    $this->app = $this->app ?? app();
-});
-
 function something()
 {
     // ..
