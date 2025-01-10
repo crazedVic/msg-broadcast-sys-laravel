@@ -2,6 +2,7 @@
 
 use App\Models\Broadcast;
 use App\Models\User;
+use App\Models\BroadcastUserState;
 
 beforeEach(function () {
     $this->admin = User::factory()->create(['is_admin' => true]);
@@ -29,6 +30,17 @@ test('admin can view broadcasts index', function () {
     $response->assertOk();
     $response->assertViewHas('broadcasts');
     $response->assertSee($broadcasts->first()->title);
+});
+
+test('admin can see broadcasts associated with user states', function () {
+$broadcast = Broadcast::factory()->create();
+BroadcastUserState::factory()->count(2)->create(['broadcast_id' => $broadcast->id]);
+
+$response = $this->actingAs($this->admin)
+    ->get(route('admin.broadcasts.index'));
+
+$response->assertOk();
+$response->assertSee($broadcast->title);
 });
 
 test('admin can view create form', function () {

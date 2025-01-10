@@ -4,6 +4,27 @@ use App\Models\Broadcast;
 use App\Models\User;
 use App\Models\BroadcastUserState;
 
+test('broadcast has many users through broadcast user states', function () {
+    $broadcast = Broadcast::factory()->create();
+    BroadcastUserState::factory()->count(3)->create(['broadcast_id' => $broadcast->id]);
+
+    expect($broadcast->users)->toHaveCount(3);
+});
+
+
+test('broadcast user state belongs to a broadcast', function () {
+    $broadcast = Broadcast::factory()->create();
+    $broadcastUserState = BroadcastUserState::factory()->create(['broadcast_id' => $broadcast->id]);
+
+    expect($broadcastUserState->broadcast)->toBeInstanceOf(Broadcast::class);
+});
+
+test('broadcast user state belongs to a user', function () {
+    $user = User::factory()->create();
+    $broadcastUserState = BroadcastUserState::factory()->create(['user_id' => $user->id]);
+
+    expect($broadcastUserState->user)->toBeInstanceOf(User::class);
+});
 test('index requires authentication', function () {
     $response = $this->get(route('user.broadcasts.index'));
     $response->assertRedirect(route('login'));
