@@ -50,21 +50,24 @@ class Broadcast extends Model
 
     public function getUserStateClassAttribute()
     {
-        return match(true) {
+        $hasDeletedUserState = $this->userStates()->withTrashed()->whereNotNull('deleted_at')->exists();
+        $hasActiveUserState = $this->userStates()->exists();
+    
+        return match (true) {
             // Broadcast is deleted and has no user state
-            $this->trashed() && !$this->has_state => 'text-orange-500 font-bold',
-            
+            $this->trashed() && !$hasActiveUserState && !$hasDeletedUserState => 'text-orange-500 font-bold',
+    
             // Broadcast is deleted and user state is deleted
-            $this->trashed() && $this->is_deleted => 'text-red-500',
-            
-            // Broadcast is deleted but was previously read
-            $this->trashed() && $this->has_state => 'text-orange-500',
-            
+            $this->trashed() && $hasDeletedUserState => 'text-red-500',
+    
+            // Broadcast is deleted but has active user state
+            $this->trashed() && $hasActiveUserState => 'text-orange-500',
+    
             // No user state (new broadcast)
-            !$this->has_state => 'font-semibold',
-            
+            !$hasActiveUserState => 'font-semibold',
+    
             // Has user state but not deleted (read)
-            default => 'font-normal'
+            default => 'font-normal',
         };
     }
 }
