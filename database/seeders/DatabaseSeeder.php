@@ -16,11 +16,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
 
-        // $this->command->getDefinition()->addOption(
-        //     new \Symfony\Component\Console\Input\InputOption('data', null,
-        //      \Symfony\Component\Console\Input\InputOption::VALUE_OPTIONAL, 'Specify the type of seeder to run')
-        // );
-
         // check for data flag
         $option = app()->bound('data_only') ? app('data_only') : false;
 
