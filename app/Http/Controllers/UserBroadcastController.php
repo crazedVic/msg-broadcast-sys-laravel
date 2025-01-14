@@ -99,7 +99,6 @@ class UserBroadcastController extends Controller
             ]);
         };
 
-
         $broadcasts = Broadcast::where('broadcasts.deleted_at', null)
             ->where(function ($query) {
                 // First query - no state exists
@@ -141,25 +140,27 @@ class UserBroadcastController extends Controller
         $user = $request->user();
         $action = $request->input('action'); // 'read' or 'delete'
 
-        $state = BroadcastUserState::firstOrNew([
-            'user_id' => $user->id,
-            'broadcast_id' => $broadcast->id
-        ]);
-
         if ($action === 'read') {
-            if ($state->exists) {
-                return response()->json(['message' => 'Broadcast already marked as read']);
-            }
+            $state = BroadcastUserState::firstOrNew([
+                'user_id' => $user->id,
+                'broadcast_id' => $broadcast->id
+            ]);
+            $state->read_at = now();
             $state->save();
             return response()->json(['message' => 'Broadcast marked as read']);
         }
 
         if ($action === 'delete') {
-            if ($state->exists) {
-                $state->delete();
-                return response()->json(['message' => 'Broadcast deleted']);
+            $state = BroadcastUserState::withTrashed()->where([
+                'user_id' => $user->id,
+                'broadcast_id' => $broadcast->id
+            ])->first();
+            if ($state) {
+                $state->read_at = now();
+                $state->deleted_at = now();
+                $state->save();
             }
-            return response()->json(['message' => 'Broadcast already deleted']);
+            return response()->json(['message' => 'Broadcast marked as read & deleted']);
         }
 
         return response()->json(['error' => 'Invalid action'], 400);
