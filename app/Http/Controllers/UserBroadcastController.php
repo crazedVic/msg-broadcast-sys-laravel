@@ -89,7 +89,7 @@ class UserBroadcastController extends Controller
                         ->where('broadcast_user_states.user_id', Auth::user()->id);
                 });
             })
-            ->orderBy('broadcasts.id')
+            ->orderBy('broadcasts.created_at', 'desc')
             ->get();
 
         foreach ($firstGet as $broadcast) {
@@ -118,7 +118,7 @@ class UserBroadcastController extends Controller
                             ->whereNull('broadcast_user_states.read_at');
                     });
             })
-            ->orderBy('broadcasts.id')
+            ->orderBy('broadcasts.created_at', 'desc')
             ->get()
             ->map(function ($broadcast) {
                 return [

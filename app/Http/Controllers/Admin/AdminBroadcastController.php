@@ -12,7 +12,7 @@ class AdminBroadcastController extends Controller
      */
     public function index()
     {
-        $broadcasts = \App\Models\Broadcast::paginate(10);
+        $broadcasts = \App\Models\Broadcast::orderBy('created_at', 'desc')->paginate(10);
         return view('admin.broadcasts.index', compact('broadcasts'));
     }
 
