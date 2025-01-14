@@ -46,11 +46,11 @@ class AdminBroadcastController extends Controller
      */
     public function show(\App\Models\Broadcast $broadcast)
     {
-     $states = $broadcast->states()->paginate(10);
+        $states = $broadcast->states()->paginate(10);
 
-     return view('admin.broadcasts.show', compact('broadcast', 'states'));
+        return view('admin.broadcasts.show', compact('broadcast', 'states'));
     }
-   
+
     /**
      * Show the form for editing the specified broadcast.
      */
@@ -58,7 +58,7 @@ class AdminBroadcastController extends Controller
     {
         return view('admin.broadcasts.edit', compact('broadcast'));
     }
-   
+
     /**
      * Update the specified broadcast in storage.
      */
@@ -68,11 +68,11 @@ class AdminBroadcastController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
         ]);
-   
+
         $broadcast->update($validated);
-   
+
         session()->flash('success', 'Broadcast updated successfully.');
-   
+
         return redirect()->route('admin.broadcasts.index');
     }
 

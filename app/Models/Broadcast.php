@@ -53,20 +53,20 @@ class Broadcast extends Model
      */
     public function getUserStateClassAttribute()
     {
-    if ($this->trashed()) {
-        return $this->userState?->deleted_at 
-            ? 'text-red-500'    // Deleted
-            : 'text-orange-500'; // Archived
-    }
+        if ($this->trashed()) {
+            return $this->userState?->deleted_at
+                ? 'text-red-500'    // Deleted
+                : 'text-orange-500'; // Archived
+        }
 
-     // Handle the userState when the broadcast is not soft-deleted
-     if ($this->userState?->deleted_at) {
-        return 'text-red-500'; // Deleted
-    }
-    
-    return (!$this->userState || is_null($this->userState->read_at))
-        ? 'font-semibold'  // New 
-        : 'font-normal';   // Read
+        // Handle the userState when the broadcast is not soft-deleted
+        if ($this->userState?->deleted_at) {
+            return 'text-red-500'; // Deleted
+        }
+
+        return (!$this->userState || is_null($this->userState->read_at))
+            ? 'font-semibold'  // New 
+            : 'font-normal';   // Read
     }
 
     public function states()

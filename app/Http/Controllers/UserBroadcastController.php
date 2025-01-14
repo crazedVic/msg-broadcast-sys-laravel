@@ -37,7 +37,7 @@ class UserBroadcastController extends Controller
                     'is_trashed' => $broadcast->trashed(),
                 ];
             });
-        
+
         return view('broadcasts.inbox', compact('broadcasts'));
     }
 
@@ -46,8 +46,8 @@ class UserBroadcastController extends Controller
         $user = Auth::user();
         $broadcast = Broadcast::findOrFail($id);
         $state = BroadcastUserState::where('user_id', $user->id)
-                                   ->where('broadcast_id', $broadcast->id)
-                                   ->first();
+            ->where('broadcast_id', $broadcast->id)
+            ->first();
 
         if (!$state) {
             $broadcast->state = 'font-bold';
@@ -65,8 +65,8 @@ class UserBroadcastController extends Controller
         $user = Auth::user();
         $broadcast = Broadcast::findOrFail($id);
         $state = BroadcastUserState::where('user_id', $user->id)
-                                   ->where('broadcast_id', $broadcast->id)
-                                   ->first();
+            ->where('broadcast_id', $broadcast->id)
+            ->first();
 
         if ($state) {
             $state->delete(); // Soft delete the state
@@ -80,9 +80,9 @@ class UserBroadcastController extends Controller
         $user = $request->user();
 
         $firstGet = Broadcast::where('broadcasts.deleted_at', null)
-            ->where(function($query) {
+            ->where(function ($query) {
                 // First query - no state exists
-                $query->whereNotExists(function($subquery) {
+                $query->whereNotExists(function ($subquery) {
                     $subquery->select('*')
                         ->from('broadcast_user_states')
                         ->whereColumn('broadcast_user_states.broadcast_id', 'broadcasts.id')
@@ -91,7 +91,7 @@ class UserBroadcastController extends Controller
             })
             ->orderBy('broadcasts.id')
             ->get();
-        
+
         foreach ($firstGet as $broadcast) {
             $broadcast->userState()->create([
                 'user_id' => $user->id,
@@ -99,38 +99,38 @@ class UserBroadcastController extends Controller
             ]);
         };
 
-        
+
         $broadcasts = Broadcast::where('broadcasts.deleted_at', null)
-            ->where(function($query) {
+            ->where(function ($query) {
                 // First query - no state exists
-                $query->whereNotExists(function($subquery) {
+                $query->whereNotExists(function ($subquery) {
                     $subquery->select('*')
                         ->from('broadcast_user_states')
                         ->whereColumn('broadcast_user_states.broadcast_id', 'broadcasts.id')
                         ->where('broadcast_user_states.user_id', 2);
                 })
-                // OR second query - unread state exists
-                ->orWhereExists(function($subquery) {
-                    $subquery->select('*')
-                        ->from('broadcast_user_states')
-                        ->whereColumn('broadcast_user_states.broadcast_id', 'broadcasts.id')
-                        ->where('broadcast_user_states.user_id', 2)
-                        ->whereNull('broadcast_user_states.deleted_at')
-                        ->whereNull('broadcast_user_states.read_at');
-                });
+                    // OR second query - unread state exists
+                    ->orWhereExists(function ($subquery) {
+                        $subquery->select('*')
+                            ->from('broadcast_user_states')
+                            ->whereColumn('broadcast_user_states.broadcast_id', 'broadcasts.id')
+                            ->where('broadcast_user_states.user_id', 2)
+                            ->whereNull('broadcast_user_states.deleted_at')
+                            ->whereNull('broadcast_user_states.read_at');
+                    });
             })
             ->orderBy('broadcasts.id')
             ->get()
-        ->map(function ($broadcast) {
-            return [
-                'id' => $broadcast->id,
-                'title' => $broadcast->title,
-                'content' => $broadcast->content,
-                'created_at' => $broadcast->created_at,
-                'is_read' => false,
-                'is_deleted' => false
-            ];
-        });
+            ->map(function ($broadcast) {
+                return [
+                    'id' => $broadcast->id,
+                    'title' => $broadcast->title,
+                    'content' => $broadcast->content,
+                    'created_at' => $broadcast->created_at,
+                    'is_read' => false,
+                    'is_deleted' => false
+                ];
+            });
 
         return response()->json($broadcasts)
             ->header('recordCount', $broadcasts->count());
