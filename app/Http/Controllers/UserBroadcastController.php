@@ -115,6 +115,25 @@ Log::info('Broadcasts after mapping:', $broadcasts->toArray());
                 'is_deleted' => false
             ];
         });
+      
+        // Create BroadcastUserState records for broadcasts without one
+        $broadcastsWithoutState = $broadcasts->whereNotIn('id', function() use ($user) {
+            return BroadcastUserState::where('user_id', $user->id)
+                ->pluck('broadcast_id');
+        });
+
+        if ($broadcastsWithoutState->isNotEmpty()) {
+            $newStates = $broadcastsWithoutState->map(function($broadcast) use ($user) {
+                return [
+                    'broadcast_id' => $broadcast->id,
+                    'user_id' => $user->id,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ];
+            })->toArray();
+
+            BroadcastUserState::insert($newStates);
+        }
 
         return response()->json($broadcasts)
             ->header('recordCount', $broadcasts->count());
