@@ -14,34 +14,29 @@ class UserBroadcastController extends Controller
     {
         /** @var \Illuminate\Database\Eloquent\Model $user */
         $user = Auth::user();
-        Log::info('User:', $user->attributesToArray());
+        //Log::info('User:', $user->attributesToArray());
 
+        $broadcasts = Broadcast::withTrashed()
+            ->with([
+                'userState' => function ($query) use ($user) {
+                    $query->where('user_id', $user->id)
+                        ->withTrashed(); // Include soft-deleted user states
+                }
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($broadcast) use ($user) {
+                $userState = $broadcast->userState; // Access the hasOne relationship
 
-$broadcasts = Broadcast::withTrashed()
-    ->with([
-        'userState' => function ($query) use ($user) {
-            $query->where('user_id', $user->id)
-                ->withTrashed(); // Include soft-deleted user states
-        }
-    ])
-    ->orderBy('created_at', 'desc')
-    ->get()
-    ->map(function ($broadcast) use ($user) {
-        $userState = $broadcast->userState; // Access the hasOne relationship
-
-        return [
-            'id' => $broadcast->id,
-            'title' => $broadcast->title,
-            'content' => $broadcast->content,
-            'created_at' => $broadcast->created_at,
-            'user_state_class' => $broadcast->userStateClass,
-            'is_trashed' => $broadcast->trashed(),
-        ];
-    });
-
-// Debug log after mapping
-Log::info('Broadcasts after mapping:', $broadcasts->toArray());
-
+                return [
+                    'id' => $broadcast->id,
+                    'title' => $broadcast->title,
+                    'content' => $broadcast->content,
+                    'created_at' => $broadcast->created_at,
+                    'user_state_class' => $broadcast->userStateClass,
+                    'is_trashed' => $broadcast->trashed(),
+                ];
+            });
         
         return view('broadcasts.inbox', compact('broadcasts'));
     }
@@ -115,25 +110,6 @@ Log::info('Broadcasts after mapping:', $broadcasts->toArray());
                 'is_deleted' => false
             ];
         });
-      
-        // Create BroadcastUserState records for broadcasts without one
-        $broadcastsWithoutState = $broadcasts->whereNotIn('id', function() use ($user) {
-            return BroadcastUserState::where('user_id', $user->id)
-                ->pluck('broadcast_id');
-        });
-
-        if ($broadcastsWithoutState->isNotEmpty()) {
-            $newStates = $broadcastsWithoutState->map(function($broadcast) use ($user) {
-                return [
-                    'broadcast_id' => $broadcast->id,
-                    'user_id' => $user->id,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ];
-            })->toArray();
-
-            BroadcastUserState::insert($newStates);
-        }
 
         return response()->json($broadcasts)
             ->header('recordCount', $broadcasts->count());
