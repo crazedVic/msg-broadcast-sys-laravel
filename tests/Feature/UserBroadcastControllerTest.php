@@ -11,7 +11,6 @@ test('broadcast has many users through broadcast user states', function () {
     expect($broadcast->users)->toHaveCount(3);
 });
 
-
 test('broadcast user state belongs to a broadcast', function () {
     $broadcast = Broadcast::factory()->create();
     $broadcastUserState = BroadcastUserState::factory()->create(['broadcast_id' => $broadcast->id]);
@@ -25,6 +24,7 @@ test('broadcast user state belongs to a user', function () {
 
     expect($broadcastUserState->user)->toBeInstanceOf(User::class);
 });
+
 test('index requires authentication', function () {
     $response = $this->get(route('user.broadcasts.index'));
     $response->assertRedirect(route('login'));
@@ -69,24 +69,19 @@ test('soft delete requires authentication', function () {
 });
 
 test('authenticated user can soft delete their own broadcast user state', function () {
-    $user = User::factory()->create(); // Create a regular user
-    $broadcast = Broadcast::factory()->create(); // Create a broadcast
+    $user = User::factory()->create();
+    $broadcast = Broadcast::factory()->create();
     $state = BroadcastUserState::factory()->create([
         'user_id' => $user->id,
         'broadcast_id' => $broadcast->id,
-    ]); // Create the associated BroadcastUserState for the user
+    ]);
 
     $response = $this->actingAs($user)
         ->delete(route('user.broadcasts.soft-delete', $broadcast->id));
 
-    // Ensure the response redirects back with a success message
     $response->assertRedirect();
     $response->assertSessionHas('success', 'Broadcast soft deleted successfully.');
-
-    // Assert the BroadcastUserState is soft deleted
     $this->assertSoftDeleted('broadcast_user_states', ['id' => $state->id]);
-
-    // Ensure the broadcast itself remains untouched
     $this->assertDatabaseHas('broadcasts', [
         'id' => $broadcast->id,
         'deleted_at' => null,
@@ -109,4 +104,141 @@ test('cannot soft delete non-existent broadcast', function () {
         ->delete(route('user.broadcasts.soft-delete', 999));
         
     $response->assertNotFound();
+});
+
+test('api index requires authentication', function () {
+    $response = $this->getJson('/api/broadcasts');
+    $response->assertUnauthorized();
+});
+
+test('authenticated user can get broadcasts via api', function () {
+    $user = User::factory()->create();
+    $broadcasts = Broadcast::factory()->count(3)->create();
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->getJson('/api/broadcasts');
+
+    $response->assertOk()
+        ->assertJsonStructure([[
+            'id',
+            'title',
+            'content',
+            'created_at',
+            'is_read',
+            'is_deleted'
+        ]])
+        ->assertHeader('recordCount', 3);
+});
+
+test('api creates broadcast user state for new broadcasts', function () {
+    $user = User::factory()->create();
+    $broadcast = Broadcast::factory()->create();
+
+    $this->actingAs($user, 'sanctum')
+        ->getJson('/api/broadcasts');
+
+    $this->assertDatabaseHas('broadcast_user_states', [
+        'user_id' => $user->id,
+        'broadcast_id' => $broadcast->id
+    ]);
+});
+
+test('api only returns unread or new broadcasts', function () {
+    $user = User::factory()->create();
+    
+    // Create different broadcast states
+    $newBroadcast = Broadcast::factory()->create();
+    $readBroadcast = Broadcast::factory()->create();
+    BroadcastUserState::factory()->create([
+        'user_id' => $user->id,
+        'broadcast_id' => $readBroadcast->id,
+        'read_at' => now()
+    ]);
+    $deletedBroadcast = Broadcast::factory()->create();
+    BroadcastUserState::factory()->create([
+        'user_id' => $user->id,
+        'broadcast_id' => $deletedBroadcast->id,
+        'deleted_at' => now()
+    ]);
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->getJson('/api/broadcasts');
+
+    $response->assertJsonCount(1)
+        ->assertJsonFragment(['id' => $newBroadcast->id]);
+});
+
+test('api update state requires authentication', function () {
+    $broadcast = Broadcast::factory()->create();
+    $response = $this->putJson("/api/broadcasts/{$broadcast->id}/state");
+    $response->assertUnauthorized();
+});
+
+test('api can mark broadcast as read', function () {
+    $user = User::factory()->create();
+    $broadcast = Broadcast::factory()->create();
+    $state = BroadcastUserState::factory()->create([
+        'user_id' => $user->id,
+        'broadcast_id' => $broadcast->id
+    ]);
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->putJson("/api/broadcasts/{$broadcast->id}/state", [
+            'action' => 'read'
+        ]);
+
+    $response->assertOk()
+        ->assertJson(['message' => 'Broadcast marked as read']);
+    
+    $this->assertNotNull($state->fresh()->read_at);
+});
+
+test('api can mark broadcast as read and deleted', function () {
+    $user = User::factory()->create();
+    $broadcast = Broadcast::factory()->create();
+    $state = BroadcastUserState::factory()->create([
+        'user_id' => $user->id,
+        'broadcast_id' => $broadcast->id
+    ]);
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->putJson("/api/broadcasts/{$broadcast->id}/state", [
+            'action' => 'delete'
+        ]);
+
+    $response->assertOk()
+        ->assertJson(['message' => 'Broadcast marked as read & deleted']);
+    
+    $this->assertNotNull($state->fresh()->read_at);
+    $this->assertNotNull($state->fresh()->deleted_at);
+});
+
+test('api update state requires valid action', function () {
+    $user = User::factory()->create();
+    $broadcast = Broadcast::factory()->create();
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->putJson("/api/broadcasts/{$broadcast->id}/state", [
+            'action' => 'invalid'
+        ]);
+
+    $response->assertStatus(400)
+        ->assertJson(['error' => 'Invalid action']);
+});
+
+test('api update state creates state if not exists', function () {
+    $user = User::factory()->create();
+    $broadcast = Broadcast::factory()->create();
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->putJson("/api/broadcasts/{$broadcast->id}/state", [
+            'action' => 'read'
+        ]);
+
+    $response->assertOk();
+    $this->assertDatabaseHas('broadcast_user_states', [
+        'user_id' => $user->id,
+        'broadcast_id' => $broadcast->id,
+        'read_at' => now()
+    ]);
 });

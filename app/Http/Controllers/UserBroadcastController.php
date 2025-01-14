@@ -86,7 +86,7 @@ class UserBroadcastController extends Controller
                     $subquery->select('*')
                         ->from('broadcast_user_states')
                         ->whereColumn('broadcast_user_states.broadcast_id', 'broadcasts.id')
-                        ->where('broadcast_user_states.user_id', 2);
+                        ->where('broadcast_user_states.user_id', Auth::user()->id);
                 });
             })
             ->orderBy('broadcasts.id')
@@ -106,14 +106,14 @@ class UserBroadcastController extends Controller
                     $subquery->select('*')
                         ->from('broadcast_user_states')
                         ->whereColumn('broadcast_user_states.broadcast_id', 'broadcasts.id')
-                        ->where('broadcast_user_states.user_id', 2);
+                        ->where('broadcast_user_states.user_id', Auth::user()->id);
                 })
                     // OR second query - unread state exists
                     ->orWhereExists(function ($subquery) {
                         $subquery->select('*')
                             ->from('broadcast_user_states')
                             ->whereColumn('broadcast_user_states.broadcast_id', 'broadcasts.id')
-                            ->where('broadcast_user_states.user_id', 2)
+                            ->where('broadcast_user_states.user_id', Auth::user()->id)
                             ->whereNull('broadcast_user_states.deleted_at')
                             ->whereNull('broadcast_user_states.read_at');
                     });
