@@ -46,7 +46,8 @@ class AdminBroadcastController extends Controller
      */
     public function show(\App\Models\Broadcast $broadcast)
     {
-     $states = $broadcast->userStates()->with('user')->paginate(10);
+     $states = $broadcast->states()->paginate(10);
+
      return view('admin.broadcasts.show', compact('broadcast', 'states'));
     }
    

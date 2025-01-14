@@ -45,7 +45,7 @@ class Broadcast extends Model
      */
     public function userState()
     {
-        return $this->hasOne(BroadcastUserState::class);
+        return $this->hasOne(BroadcastUserState::class)->withTrashed();
     }
 
     /**
@@ -67,5 +67,17 @@ class Broadcast extends Model
     return (!$this->userState || is_null($this->userState->read_at))
         ? 'font-semibold'  // New 
         : 'font-normal';   // Read
+    }
+
+    public function states()
+    {
+        return $this->hasManyThrough(
+            User::class,                     // Target model
+            BroadcastUserState::class,       // Intermediate model
+            'broadcast_id',                  // Foreign key on `BroadcastUserState` table
+            'id',                           // Foreign key on `User` table
+            'id',                            // Local key on `Broadcast` table
+            'user_id'                        // Local key on `BroadcastUserState` table
+        );
     }
 }
