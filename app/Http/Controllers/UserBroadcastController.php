@@ -78,6 +78,27 @@ class UserBroadcastController extends Controller
     public function apiIndex(Request $request)
     {
         $user = $request->user();
+
+        $firstGet = Broadcast::where('broadcasts.deleted_at', null)
+            ->where(function($query) {
+                // First query - no state exists
+                $query->whereNotExists(function($subquery) {
+                    $subquery->select('*')
+                        ->from('broadcast_user_states')
+                        ->whereColumn('broadcast_user_states.broadcast_id', 'broadcasts.id')
+                        ->where('broadcast_user_states.user_id', 2);
+                });
+            })
+            ->orderBy('broadcasts.id')
+            ->get();
+        
+        foreach ($firstGet as $broadcast) {
+            $broadcast->userState()->create([
+                'user_id' => $user->id,
+                'broadcast_id' => $broadcast->id
+            ]);
+        };
+
         
         $broadcasts = Broadcast::where('broadcasts.deleted_at', null)
             ->where(function($query) {
