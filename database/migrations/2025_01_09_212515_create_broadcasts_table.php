@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('content');
+            $table->dateTime('expires_at')->nullable();
             $table->timestamps();
             $table->softDeletes();  
         });

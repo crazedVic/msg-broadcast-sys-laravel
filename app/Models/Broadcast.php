@@ -43,31 +43,29 @@ class Broadcast extends Model
     /**
      * Get the user states for the broadcast.
      */
-    public function userStates()
+    public function userState()
     {
-        return $this->hasMany(BroadcastUserState::class);
+        return $this->hasOne(BroadcastUserState::class);
     }
 
+    /**
+     * Get the user state class for the broadcast.
+     */
     public function getUserStateClassAttribute()
     {
-        $hasDeletedUserState = $this->userStates()->withTrashed()->whereNotNull('deleted_at')->exists();
-        $hasActiveUserState = $this->userStates()->exists();
+    if ($this->trashed()) {
+        return $this->userState?->deleted_at 
+            ? 'text-red-500'    // Deleted
+            : 'text-orange-500'; // Archived
+    }
+
+     // Handle the userState when the broadcast is not soft-deleted
+     if ($this->userState?->deleted_at) {
+        return 'text-red-500'; // Deleted
+    }
     
-        return match (true) {
-            // Broadcast is deleted and has no user state
-            $this->trashed() && !$hasActiveUserState && !$hasDeletedUserState => 'text-orange-500 font-bold',
-    
-            // Broadcast is deleted and user state is deleted
-            $this->trashed() && $hasDeletedUserState => 'text-red-500',
-    
-            // Broadcast is deleted but has active user state
-            $this->trashed() && $hasActiveUserState => 'text-orange-500',
-    
-            // No user state (new broadcast)
-            !$hasActiveUserState => 'font-semibold',
-    
-            // Has user state but not deleted (read)
-            default => 'font-normal',
-        };
+    return (!$this->userState || is_null($this->userState->read_at))
+        ? 'font-semibold'  // New 
+        : 'font-normal';   // Read
     }
 }

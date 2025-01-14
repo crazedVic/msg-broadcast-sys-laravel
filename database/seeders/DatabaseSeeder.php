@@ -48,8 +48,9 @@ class DatabaseSeeder extends Seeder
         }
       
         // Create 10 broadcasts with dates in the last 30 days
-        Broadcast::factory(125)->create()->each(function ($broadcast) {
+        Broadcast::factory(20)->create()->each(function ($broadcast) {
             $broadcast->created_at = Carbon::now()->subDays(rand(0, 30));
+           // $broadcast->expires_at = rand(0, 2) === 0 ? Carbon::now()->subDays(rand(0, 10)) : null;
             $broadcast->save();
         });
 
@@ -61,12 +62,13 @@ class DatabaseSeeder extends Seeder
             $usersToInteract = $users->shuffle()->take(rand(0, $users->count() - 1));
             //$usersToInteract = $users->skip(1)->shuffle()->take(rand(0, $users->count()));
             foreach ($usersToInteract as $user) {
+                $deleted  = rand(0, 3) === 0;
                 if (rand(0, 2) > 0) { // Mark as read or deleted
                     BroadcastUserState::create([
                         'user_id' => $user->id,
                         'broadcast_id' => $broadcast->id,
-                        'read_at' => rand(0, 5) < 4 ? Carbon::now()->subDays(rand(0, 30)) : null, // Randomly set read_at
-                        'deleted_at' => rand(0, 2) === 0 ? Carbon::now()->subDays(rand(0, 30)) : null, // Randomly set deleted_at
+                        'read_at' => $deleted || rand(0, 5) < 4 ? Carbon::now()->subDays(rand(0, 30)) : null, // Randomly set read_at
+                        'deleted_at' => $deleted ? Carbon::now()->subDays(rand(0, 30)) : null, // Randomly set deleted_at
                         'created_at' => Carbon::now()->subDays(rand(0, 30)),
                         'updated_at' => Carbon::now()->subDays(rand(0, 30)),
                     ]);

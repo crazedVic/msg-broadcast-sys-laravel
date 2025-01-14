@@ -18,8 +18,12 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    Route::get('/token/verify', function (Request $request) {
+        return response()->json(['message' => 'Token is valid'], 200);
+    });
     
     // Broadcast routes
-    Route::get('/broadcasts', [UserBroadcastController::class, 'index']);
-    Route::put('/broadcasts/{broadcast}/state', [UserBroadcastController::class, 'updateState']);
+    Route::get('/broadcasts', [UserBroadcastController::class, 'apiIndex']);
+    Route::put('/broadcasts/{broadcast}/state', [UserBroadcastController::class, 'apiUpdateState']);
 });
